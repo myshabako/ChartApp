@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 18 16:51:13 2018
+Created on Fri Dec 20 16:51:13 2018
 
-@author: thomas
+@author: Thomas Atta-Fosu (attafosu@yahoo.com)
 """
 
 from tkinter import StringVar, Label, Button, TOP, BOTH, Tk, ttk, filedialog, messagebox, N, W, E, S
@@ -109,14 +109,14 @@ class chartGui(object):
         
     def runGui(self):
         Button(self.root, text="Quit", command=self.on_closing)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
     
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.root.destroy()
+            sys.exit(1)
         
-#data = '/home/thomas/Documents/BoydWatterson-Local/DoubleLine Graphs-Local/Data/DoubleLine Chart Data_original.xlsx'
 if __name__ == '__main__':
     gui = chartGui()
     gui.runGui()
-    sys.exit(1)

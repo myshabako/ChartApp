@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 10 23:05:15 2018
+Created on Thu Dec 20 23:05:15 2018
 
-@author: thomas
+@author: Thomas Atta-Fosu (attafosu@yahoo.com)
 """
 
 import pandas as pd
@@ -13,12 +13,6 @@ from matplotlib import pylab as plt
 from matplotlib import dates as mdates
 from dateutil import relativedelta
 
-
-#data = '/home/thomas/Documents/BoydWatterson-Local/DoubleLine Graphs-Local/Data/DoubleLine Chart Data_original.xlsx'
-#gdp_data = '/home/thomas/Documents/BoydWatterson/Rank/quarterly_gdp.xls'
-#gdp_xls = pd.ExcelFile(gdp_data)
-#
-#GDP = gdp_xls.parse(sheetname='FRED Graph').get_values()
 #%% Recession Months
 Recessions = {1949: (datetime.date(1948, 11, 30), datetime.date(1949, 10, 1)),
               1953: (datetime.date(1953, 7, 31), datetime.date(1954, 5, 1)),
@@ -47,20 +41,20 @@ class DoubleLineGraphs:
 #            return
 #        
         try:
-            self.LEI = xls.parse(sheet_name="LEI Year over Year Change").get_values()
+            self.LEI = xls.parse("LEI Year over Year Change").get_values()
         except:
             print("Spreadsheet does not have sheet named 'LEI Year over Year Change'. Cannot plot LEI graphs")
         
-        self.PMI = xls.parse(sheet_name='PMI').get_values()
-        self.CC = xls.parse('Consumer Confidence').get_values() #Consumer Confidence
-        self.CEOC = xls.parse('CEO Confidence').get_values() # CEO Confidence
-        self.HBC = xls.parse('Home Builder Confidence').get_values()
-        self.SBO = xls.parse('Small Business Optimism').get_values()
-        self.HYS = xls.parse('HY Spreads').get_values()
-        self.CPI = xls.parse('Core CPI').get_values()
-        self.GDP = xls.parse('Real GDP YoY').get_values()
-        self.NYFED = xls.parse('New York Fed Underlying Inf').get_values()
-        self.CU = xls.parse('Capacity Utilization').get_values()
+        self.PMI = xls.parse('PMI',header=None).get_values()
+        self.CC = xls.parse('Consumer Confidence',header=None).get_values() #Consumer Confidence
+        self.CEOC = xls.parse('CEO Confidence',header=None).get_values() # CEO Confidence
+        self.HBC = xls.parse('Home Builder Confidence',header=None).get_values()
+        self.SBO = xls.parse('Small Business Optimism',header=None).get_values()
+        self.HYS = xls.parse('HY Spreads',header=None).get_values()
+        self.CPI = xls.parse('Core CPI',header=None).get_values()
+        self.GDP = xls.parse('Real GDP YoY',header=None).get_values()
+        self.NYFED = xls.parse('New York Fed Underlying Inf',header=None).get_values()
+        self.CU = xls.parse('Capacity Utilization',header=None).get_values()
 
 #%%        
     def coreCPIvCapacityUtil(self, cpi_start_date=datetime.date(1998, 1,1),
@@ -205,7 +199,7 @@ class DoubleLineGraphs:
         # scope ---> How far out to track (for High yield spreads, this is no. of days)
         # data_end_date ----> Latest month       
 #        trending_year_start_date = data_end_date.replace(year=data_end_date.year-1) # 1 year ago
-        print("data_end_date: {}".format(data_end_date))
+        #print("data_end_date: {}".format(data_end_date))
 #        current_1year_trend = {} # to store the preceding year's data    
         self.HYscope = scope
         self.one_year_to_recession = {}
@@ -213,7 +207,7 @@ class DoubleLineGraphs:
         self.recession_2001 = {}
         self.recession_2007 = {}
         
-        for d in range(self.HYS.shape[0]):
+        for d in range(1,self.HYS.shape[0]):
             
             day = self.HYS[d,0]
             
@@ -227,8 +221,8 @@ class DoubleLineGraphs:
                 continue
             
             
-            ymd = day.split('/')
-            date = datetime.date(int(ymd[2]), int(ymd[0]), int(ymd[1]))
+            #ymd = day.split('/')
+            date = datetime.datetime.strptime(day,'%m/%d/%Y').date()#datetime.date(int(ymd[2]), int(ymd[0]), int(ymd[1]))
             # Saving past year trends
             
             if abs((Recessions[2001][0] - date).days) < scope:
@@ -253,6 +247,7 @@ class DoubleLineGraphs:
         
         months_to_and_after = dict((el, []) for el in range(-scope, scope+1, 1)) # To store the leadinng months
         
+        end_date = datetime.datetime(1920,1,1,0,0) # To get end date
         for year in Recessions.keys():
             
             start_date = Recessions[year][0]
@@ -273,7 +268,8 @@ class DoubleLineGraphs:
                     val = self.LEI[self.LEI[:,0]==date, 1]
                     months_to_and_after[timediff].append( val[0] )
                     
-            
+                if end_date < date:
+                    end_date = date
         #%%  Do some stats
         # stats are 25th percentile, mean and 75th percentile 
         mean_vals = {}
@@ -287,7 +283,7 @@ class DoubleLineGraphs:
             prctile_75[lag_month] = np.percentile(vals, 75)
                 
         #%% Current year trend stats
-        data_end_date = self.LEI[self.LEI[:,0]=='End Date',1][0] # Get latest month 
+        data_end_date = end_date#self.LEI[self.LEI[:,0]=='End Date',1][0] # Get latest month 
         
         trending_year_start_date = data_end_date.replace(year=data_end_date.year-trending_year) # tracking period ago
         
@@ -319,10 +315,11 @@ class DoubleLineGraphs:
     #%% ISM PMI leading to recession
     def pmiLeadingToRecession(self, scope, trending_year=1):
         # scope ---> How far out to track
-        # trending_year ---->  current period in perspective
+        # trending_year ---->  current period in focus
         
         months_to_and_after = dict((el, []) for el in range(-scope, scope+1, 1)) # To store the leadinng months
         
+        end_date = datetime.datetime(1920,1,1,0,0)
         for year in Recessions.keys():
             
             start_date = Recessions[year][0]
@@ -344,6 +341,9 @@ class DoubleLineGraphs:
                     val = self.PMI[self.PMI[:,0]==date, 1]
                     months_to_and_after[timediff].append( val[0] )
                     
+                if end_date < date:
+                    end_date = date
+                    
             
         #%%  Do some stats
         # stats are 25th percentile, mean and 75th percentile 
@@ -359,7 +359,7 @@ class DoubleLineGraphs:
 
         
         #%% Current year trend stats
-        data_end_date = self.PMI[self.PMI[:,0]=='End Date',1][0] # Get latest month 
+        data_end_date = end_date#self.PMI[self.PMI[:,0]=='End Date',1][0] # Get latest month 
         
         trending_year_start_date = data_end_date.replace(year=data_end_date.year-1) # 1 year ago
         
@@ -733,8 +733,15 @@ class DoubleLineGraphs:
         
         #dates=[datetime.date(int(el.split('/')[2]), int(el.split('/')[0]), int(el.split('/')[1])) for el in self.HYS[2:,0] if ((not isinstance(el, float)) and ('/' in el) and (len(el)<15) )]
         entry = self.HYS[4,0]
-        d = entry.split('/')
-        end_date=datetime.date(int(d[2]), int(d[0]), int(d[1]))
+        if isinstance(entry, datetime.date):
+            end_date=entry
+        else:
+            try:
+                end_date=datetime.datetime.strptime(entry,'%m/%d/%Y').date()
+            except TypeError:
+                print("Cannot parse '{}' as date. Check entry 5 of 'HY Spreads'. See 'plotHighYield' method in 'ChartAppPlots.py' to change end_date'".format(entry))            
+        
+        #print("End date: {}".format(end_date))
         self.HighYeildSpread(scope=600, data_end_date=end_date)
         
         fig = plt.figure(figsize=(15,7))
@@ -843,16 +850,4 @@ class DoubleLineGraphs:
         ax.vlines(0, ybounds[0], ybounds[1], linestyle='dashed',lw=3)
         
         return fig
-#data = '/home/thomas/Chart App/DoubleLine Chart Data_original.xlsx'
-#
-#po = DoubleLineGraphs(data)
-#po.plotPMItoRecession()
-#po.coreCPIvCapacityUtil()
-#po.plotCPIvCapacityUtil()
-#po.coreCPIvsISMPMI()
-#po.plotCPIvsPMI()
-#po.plotCPIvsNYFED()
-#po.plotCPIvsGDP()
 
-#po.plotDummyCPIvsPMI()
-#po.plotDummyCPIvCapacityUtil()
