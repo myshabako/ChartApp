@@ -4,11 +4,12 @@ This project implements visualization toolkit for some macro series
 
 ## Requirements
 
-  	python2.7 (or python3.6)
+  	python3.6
   	numpy
   	pandas
   	matplotlib
   	tkinter
+	xlsd>=0.9.0
 
 ## Installation
 
