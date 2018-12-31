@@ -8,7 +8,7 @@ Created on Fri Dec 20 16:51:13 2018
 
 from tkinter import StringVar, Label, Button, TOP, BOTH, Tk, ttk, filedialog, messagebox, N, W, E, S
 from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2TkAgg)
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 import chartAppPlots as po
 import sys
@@ -99,7 +99,7 @@ class chartGui(object):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.frame)  # A tk.DrawingArea.
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self.frame)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.frame)
         self.toolbar.update()
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
         
